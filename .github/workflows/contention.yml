@@ -1,0 +1,22 @@
+name: PostgreSQL contention case study
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run paired trials
+        run: |
+          mkdir results
+          docker pull postgres:17
+          docker image inspect postgres:17 --format '{{index .RepoDigests 0}}' > results/image.txt
+          lscpu > results/cpu.txt
+          python3 run.py --clients 1 4 16 32 --hold-ms 0 5 --seconds 10 --repeats 3 --seed 42 --report results/comparison.md > results/trials.csv
+          cat results/comparison.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: postgres-contention-measurements
+          path: results/

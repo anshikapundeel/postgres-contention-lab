@@ -13,3 +13,7 @@ Each point starts with a fresh table. In the hot-row workload, all clients updat
 Compare throughput and p99 between the shared-row workload and its control at each hold time. Report the trial-to-trial range. Look for the first concurrency level at which throughput plateaus while p99 keeps rising. The lab uses persistent pgbench connections and one client worker. Its results describe a synthetic hot-row workload. Record image digest, Docker limits, machine and trial duration, and repeat trials before drawing conclusions. This repository ships no measured results.
 
 Add `--report comparison.md` to generate paired throughput and tail-latency ratios. The CSV includes counts from pg_stat_activity, sampled throughout each trial. A zero observation count means insufficient sampling coverage. The observer runs in both layouts.
+
+## Run the case study on GitHub
+
+Use Actions → PostgreSQL contention case study → Run workflow. The manual job runs 48 trials on one runner. Download the artifact for the trial CSV, paired comparisons, CPU details and PostgreSQL image digest. Shared-runner scheduling can influence the measured latencies. The paired observations apply to that run.
