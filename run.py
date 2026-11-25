@@ -56,6 +56,19 @@ def observe_locks(name, stop):
 
 
 def report(rows):
+    layouts = {layout for group in rows.values() for layout in group}
+    if len(layouts) == 1:
+        layout = next(iter(layouts))
+        lines = ["# PostgreSQL contention experiment", "",
+                 f"Measured layout: {layout}. Run both layouts for a paired comparison.", "",
+                 "| Repeat | Clients | Hold (ms) | Transactions | TPS | p99 (ms) | Lock-wait share |",
+                 "|---:|---:|---:|---:|---:|---:|---:|"]
+        for (repeat, clients, hold), group in sorted(rows.items()):
+            samples, tps, _, _, p99, _, waits, observed = group[layout]
+            share = f"{waits / observed:.1%}" if observed else "unobserved"
+            lines.append(f"| {repeat} | {clients} | {hold} | {samples} | {tps:.2f} | {p99:.2f} | {share} |")
+        return "\n".join(lines) + "\n"
+
     lines = ["# PostgreSQL contention experiment", "",
              "Each row pairs a shared-row trial with its per-client control.",
              "A ratio above one means the shared-row value was higher.", "",
@@ -90,7 +103,7 @@ def main():
                         default=["hot-row", "per-client"])
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--report", type=Path, help="write paired comparisons as Markdown")
+    parser.add_argument("--report", type=Path, help="write trial results or paired comparisons as Markdown")
     args = parser.parse_args()
     if min(args.clients) < 1 or max(args.clients) > 64 or min(args.hold_ms) < 0 or min(args.seconds, args.repeats) < 1:
         parser.error("use 1–64 clients, nonnegative hold times, and positive duration and repeat count")
